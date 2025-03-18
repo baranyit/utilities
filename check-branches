@@ -1,0 +1,73 @@
+#!/bin/zsh
+
+# Colors for output
+GREEN=$'\033[0;32m'
+RED=$'\033[0;31m'
+YELLOW=$'\033[0;33m'
+NC=$'\033[0m' # No Color
+
+# Loop through each directory in the current directory
+for dir in */; do
+  # Check if the directory is a git repository
+  if [ -d "$dir/.git" ]; then
+    # Enter the subdirectory
+    cd "$dir" || continue
+    
+    # Fetch the latest changes from the remote repository
+    git fetch origin > /dev/null 2>&1
+    
+    # Get the current branch name
+    branch=$(git rev-parse --abbrev-ref HEAD)
+    
+    # Get the number of commits the local branch is behind the remote branch
+    behindCount=$(git rev-list --count HEAD..origin/$branch 2>/dev/null)
+    behind=""
+
+    # Set the behind status with appropriate color
+    if [ "$behindCount" != "0" ]; then
+      behind="${RED}↘${behindCount}${NC}"
+    fi
+
+    # Get the number of commits the local branch is behind the remote branch
+    aheadCount=$(git rev-list --count origin/$branch..HEAD 2>/dev/null)
+    ahead=""
+
+    # Set the ahead status with appropriate color
+    if [ "$aheadCount" != "0" ]; then
+      ahead="${YELLOW}↗${aheadCount}${NC}"
+    else
+    fi
+
+    # Add a space if both ahead and behind are present
+    difference=""
+
+    if [ -z "$ahead" ] && [ -z "$behind" ]; then
+      difference="${GREEN}✔${NC}"
+    else
+      difference="${behind}${ahead}"
+    fi
+
+    # Set color for branch name
+    if [ "$branch" = "main" ]; then
+      branch="${GREEN}${branch}${NC}"
+    else
+      branch="${RED}${branch}${NC}"
+    fi
+
+    # Check the working directory status
+    st=""
+    if [ -z "$(git status --untracked-files=no --porcelain)" ]; then 
+      # Working directory is clean
+      st="${GREEN}clean${NC}"
+    else 
+      # There are uncommitted changes
+      st="${RED}uncommitted${NC}"
+    fi
+    
+    # Print out the results in a formatted manner
+    printf "%-50s %-40s %s\n" "$dir" "$st" "$branch $difference" 
+    
+    # Return to the parent directory
+    cd ..
+  fi
+done
