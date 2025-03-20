@@ -1,0 +1,34 @@
+#!/bin/bash
+
+source common
+
+# Traverse all directories in the current working directory
+printf "%-50s %-9s %s\n" "Directory" "Main" "Submodule" 
+printf "%-50s %-9s %s\n" "---------" "----" "---------"
+for dir in */ ; do
+    # Check if the directory is a git repository
+    if [ -d "$dir/.git" ]; then
+        printf "%-50s " "$dir"
+        cd "$dir"
+        
+        # Switch to the main branch
+        git checkout main > /dev/null 2>&1
+        
+        # Fetch and pull the latest from origin
+        if git pull origin main > /dev/null 2>&1; then
+            printf "%-22s " "${GREEN}${ICON_CHECK}${NC}"
+        else
+            printf "%-22s " "${RED}${ICON_CROSS}${NC}"
+        fi
+        
+        # Update submodule to the reference in the main branch
+        if git submodule update --init --recursive > /dev/null 2>&1; then
+            printf "%s\n" "${GREEN}${ICON_CHECK}${NC}"
+        else
+            printf "%s\n" "${RED}${ICON_CROSS}${NC}"
+        fi
+        
+        # Go back to the parent directory
+        cd ..
+    fi
+done

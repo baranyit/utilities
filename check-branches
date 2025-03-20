@@ -1,23 +1,37 @@
 #!/bin/zsh
 
-# Colors for output
-GREEN=$'\033[0;32m'
-RED=$'\033[0;31m'
-YELLOW=$'\033[0;33m'
-NC=$'\033[0m' # No Color
+source common
 
 # Loop through each directory in the current directory
+printf "%-50s %-9s %-9s %s\n" "Directory" "Clean" "Diff" "Branch name" 
+printf "%-50s %-9s %-9s %s\n" "--------------------------------------------------" "---------" "---------" "-----------"
 for dir in */; do
   # Check if the directory is a git repository
   if [ -d "$dir/.git" ]; then
     # Enter the subdirectory
     cd "$dir" || continue
-    
+
+    # Print out the results in a formatted manner
+    printf "%-50s " "$dir"
+
     # Fetch the latest changes from the remote repository
     git fetch origin > /dev/null 2>&1
     
     # Get the current branch name
     branch=$(git rev-parse --abbrev-ref HEAD)
+
+    # Check the working directory status
+    st=""
+    if [ -z "$(git status --untracked-files=no --porcelain)" ]; then 
+      # Working directory is clean
+      st="${GREEN}${ICON_CHECK}${NC}"
+    else 
+      # There are uncommitted changes
+      st="${RED}${ICON_CROSS}${NC}"
+    fi
+
+    # Print out the results in a formatted manner
+    printf "%-20s " "$st"
     
     # Get the number of commits the local branch is behind the remote branch
     behindCount=$(git rev-list --count HEAD..origin/$branch 2>/dev/null)
@@ -25,7 +39,7 @@ for dir in */; do
 
     # Set the behind status with appropriate color
     if [ "$behindCount" != "0" ]; then
-      behind="${RED}↘${behindCount}${NC}"
+      behind="${RED}${ICON_ARROW_RIGHT_DOWN}${behindCount}${NC}"
     fi
 
     # Get the number of commits the local branch is behind the remote branch
@@ -34,7 +48,7 @@ for dir in */; do
 
     # Set the ahead status with appropriate color
     if [ "$aheadCount" != "0" ]; then
-      ahead="${YELLOW}↗${aheadCount}${NC}"
+      ahead="${YELLOW}${ICON_ARROW_RIGHT_UP}${aheadCount}${NC}"
     else
     fi
 
@@ -42,10 +56,13 @@ for dir in */; do
     difference=""
 
     if [ -z "$ahead" ] && [ -z "$behind" ]; then
-      difference="${GREEN}✔${NC}"
+      difference="${GREEN}${ICON_CHECK}${NC}"
     else
       difference="${behind}${ahead}"
     fi
+
+    # Print out the results in a formatted manner
+    printf "%-20s " "$difference"
 
     # Set color for branch name
     if [ "$branch" = "main" ]; then
@@ -54,18 +71,8 @@ for dir in */; do
       branch="${RED}${branch}${NC}"
     fi
 
-    # Check the working directory status
-    st=""
-    if [ -z "$(git status --untracked-files=no --porcelain)" ]; then 
-      # Working directory is clean
-      st="${GREEN}clean${NC}"
-    else 
-      # There are uncommitted changes
-      st="${RED}uncommitted${NC}"
-    fi
-    
     # Print out the results in a formatted manner
-    printf "%-50s %-40s %s\n" "$dir" "$st" "$branch $difference" 
+    printf "%s\n" "$branch" 
     
     # Return to the parent directory
     cd ..
