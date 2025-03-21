@@ -11,21 +11,26 @@ for dir in */ ; do
         printf "%-50s " "$dir"
         cd "$dir"
         
-        # Switch to the main branch
-        git checkout main > /dev/null 2>&1
-        
-        # Fetch and pull the latest from origin
-        if git pull origin main > /dev/null 2>&1; then
+        # Check if the working directory is clean
+        if git diff-index --quiet HEAD --; then
+            # Switch to the main branch
+            git checkout main > /dev/null 2>&1
+            
+            # Fetch and pull the latest from origin
+            if git pull origin main > /dev/null 2>&1; then
             printf "%-22s " "${GREEN}${ICON_CHECK}${NC}"
-        else
+            else
             printf "%-22s " "${RED}${ICON_CROSS}${NC}"
-        fi
-        
-        # Update submodule to the reference in the main branch
-        if git submodule update --init --recursive > /dev/null 2>&1; then
+            fi
+            
+            # Update submodule to the reference in the main branch
+            if git submodule update --init --recursive > /dev/null 2>&1; then
             printf "%s\n" "${GREEN}${ICON_CHECK}${NC}"
-        else
+            else
             printf "%s\n" "${RED}${ICON_CROSS}${NC}"
+            fi
+        else
+            printf "%-22s %s\n" "${YELLOW}${ICON_CROSS}${NC}" "${YELLOW}${ICON_CROSS}${NC}"
         fi
         
         # Go back to the parent directory
