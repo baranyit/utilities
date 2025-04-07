@@ -1,11 +1,17 @@
 #!/bin/bash
-
 source common
+
+# Check if a directory is provided as a command-line argument
+if [ $# -gt 0 ]; then
+  dirs=("$@")
+else
+  dirs=(*)
+fi
 
 # Traverse all directories in the current working directory
 printf "%-50s %-9s %s\n" "Directory" "Main" "Submodule" 
 printf "%-50s %-9s %s\n" "---------" "----" "---------"
-for dir in */ ; do
+for dir in $dirs ; do
     # Check if the directory is a git repository
     if [ -d "$dir/.git" ]; then
         printf "%-50s " "$dir"

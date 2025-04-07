@@ -1,11 +1,17 @@
 #!/bin/zsh
-
 source common
+
+# Check if a directory is provided as a command-line argument
+if [ $# -gt 0 ]; then
+  dirs=("$@")
+else
+  dirs=(*)
+fi
 
 # Loop through each directory in the current directory
 printf "%-50s %-9s %-9s %s\n" "Directory" "Clean" "Diff" "Branch name" 
 printf "%-50s %-9s %-9s %s\n" "--------------------------------------------------" "---------" "---------" "-----------"
-for dir in */; do
+for dir in $dirs; do
   # Check if the directory is a git repository
   if [ -d "$dir/.git" ]; then
     # Enter the subdirectory
